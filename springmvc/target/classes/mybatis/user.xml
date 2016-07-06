@@ -1,0 +1,154 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+ <mapper namespace="com.apple.springmvc.dao.IUserDao">
+    <resultMap id="UserMap" type="com.apple.springmvc.bean.User">
+        <id column="Id" property="id" jdbcType="INTEGER"/>
+        <result column="user_id" property="userId" jdbcType="VARCHAR"/>
+        <result column="user_name" property="userName" jdbcType="VARCHAR"/>
+        <result column="real_name" property="realName" jdbcType="VARCHAR"/>
+        <result column="sex" property="sex" jdbcType="INTEGER"/>
+        <result column="age" property="age" jdbcType="INTEGER"/>
+        <result column="mobile" property="mobile" jdbcType="VARCHAR"/>
+        <result column="phone" property="phone" jdbcType="VARCHAR"/>
+        <result column="address" property="address" jdbcType="VARCHAR"/>
+        <result column="create_time" property="createTime" jdbcType="DATE"/>
+        <result column="update_time" property="updateTime" jdbcType="DATE"/>
+        <result column="remark" property="remark" jdbcType="VARCHAR"/>
+    </resultMap>
+
+    <!-- 获取所有用户 -->
+    <select id="getAllUser" resultMap="UserMap">
+        SELECT * FROM user
+    </select>
+
+    <!-- 新增单个用户 -->
+    <insert id="addUser" parameterType="com.apple.springmvc.bean.User" >
+        INSERT INTO user
+        (user_id,user_name,real_name,sex,age,mobile,phone,address,create_time,update_time,remark)
+        VALUES
+        (#{userId},#{userName},#{realName},#{sex},#{age},#{mobile},#{phone},#{address},now(),now(),#{remark})
+    </insert>
+
+    <!-- 批量新增用户 -->
+    <insert id="addUserBatch" parameterType="java.util.List">
+        INSERT INTO user
+        (user_id,user_name,real_name,sex,age,mobile,phone,address,create_time,update_time,remark)
+        VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.userId},#{item.userName},#{item.realName},#{item.sex},#{item.age},#{item.mobile},#{item.phone},#{item.address},now(),now(),#{item.remark})
+        </foreach>
+    </insert>
+
+    <!-- 更新单个用户 -->
+    <update id="updateUser" parameterType="com.apple.springmvc.bean.User">
+        UPDATE user SET
+        real_name = #{realName},sex = #{sex},age = #{age},mobile = #{mobile},phone = #{phone},address = #{address},update_time = now(),remark = #{remark}
+        WHERE
+        user_id = #{userId}
+    </update>
+
+    <!-- 批量更新用户 -->
+    <update id="updateUserBatch" parameterType="java.util.List">
+        UPDATE user
+        <trim prefix="set" suffixOverrides=",">
+            <trim prefix="real_name = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.realName !=null">
+                        WHEN user_id = #{item.userId} THEN #{item.realName}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="age = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.age !=null">
+                        WHEN user_id = #{item.userId} THEN #{item.age}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="mobile = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.mobile !=null">
+                        WHEN user_id = #{item.userId} THEN #{item.mobile}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="phone = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.phone !=null">
+                        WHEN user_id = #{item.userId} THEN #{item.phone}
+                    </if>
+                </foreach>
+            </trim>
+            <trim prefix="remark = case" suffix="end,">
+                <foreach collection="list" item="item" index="index">
+                    <if test="item.remark !=null">
+                        WHEN user_id = #{item.userId} THEN #{item.remark}
+                    </if>
+                </foreach>
+            </trim>
+        </trim>
+        WHERE
+        <foreach collection="list" separator="or" item="item" index="index">
+            user_id = #{item.userId}
+        </foreach>
+    </update>
+
+    <!-- 根据 user_id 删除单个用户 -->
+    <delete id="deleteUserById" parameterType="java.lang.String">
+        DELETE FROM user WHERE user_id = #{userId}
+    </delete>
+
+    <!-- 根据 user_id 批量删除用户 -->
+    <delete id="deleteUserByIdBatch" parameterType="java.util.List">
+        DELETE FROM
+        user
+        WHERE
+        user_id
+        IN
+        <foreach collection="userIds" item="userId" index="index" open="(" close=")" separator=",">
+            #{userId}
+        </foreach>
+    </delete>
+
+    <!-- 根据 userId 查找用户 -->
+    <select id="getUserById" parameterType="java.lang.String" resultMap="UserMap" >
+        SELECT * FROM user WHERE user_id = #{userId}
+    </select>
+
+    <!-- 批量根据 userId 查找用户 -->
+    <select id="getUserByIdBatch" parameterType="java.util.List" resultMap="UserMap">
+         SELECT * FROM
+         user
+         WHERE
+         user_id
+         IN
+         <foreach collection="userIds" item="userId" index="index" open="(" close=")" separator=",">
+          #{userId}
+         </foreach>
+    </select>
+
+    <!-- 多条件查询 -->
+    <select id="getUserByParam" parameterType="com.apple.springmvc.bean.QueryUser" resultMap="UserMap">
+        SELECT * FROM
+        user
+        WHERE 1=1
+        <if test="userId != null">
+            AND user_id = #{userId}
+        </if>
+        <if test="userName != null">
+            AND user_name LIKE "%"#{userName}"%"
+        </if>
+        <if test="realName != null">
+            AND real_name LIKE "%"#{realName}"%"
+        </if>
+        <if test="mobile != null">
+            AND mobile = #{mobile}
+        </if>
+        <if test="phone != null">
+            AND phone = #{phone}
+        </if>
+
+    </select>
+
+</mapper>
